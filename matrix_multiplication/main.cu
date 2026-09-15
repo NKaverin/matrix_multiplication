@@ -14,14 +14,8 @@
     } while (0)
 
 __global__
-void helloFromGPU() {
-    printf("Hello World from GPU thread %d!\n", threadIdx.x);
-}
-
-__global__
 void vecAddKernel(float* A, float* B, float* C, int n) {
     int i = threadIdx.x + blockDim.x * blockIdx.x;
-    printf("%d\n", gridDim.x);
     if (i < n) {
         C[i] = A[i] + B[i];
     }
@@ -50,19 +44,20 @@ void vecAdd(float* A, float* B, float* C, int n) {
 }
 
 int main() {
-    int n = 1024;
+    int rows = 1024;
+    int columns = 1024;
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::mt19937 gen(seed);
     std::uniform_int_distribution<int> distrib(1, 100);
-    float* A_h = (float*)malloc(sizeof(float) * n);
-    float* B_h = (float*)malloc(sizeof(float) * n);
-    float* C_h = (float*)malloc(sizeof(float) * n);
-    for (size_t i = 0; i < n; i++) {
+    float* A_h = (float*)malloc(sizeof(float) * rows * columns);
+    float* B_h = (float*)malloc(sizeof(float) * rows * columns);
+    float* C_h = (float*)malloc(sizeof(float) * rows * columns);
+    int size = rows * columns;
+    for (size_t i = 0; i < size; i++) {
         A_h[i] = distrib(gen);
         B_h[i] = distrib(gen);
     }
-    helloFromGPU << <1, 5 >> > ();
-    vecAdd(A_h, B_h, C_h, n);
+    vecAdd(A_h, B_h, C_h, size);
     cudaDeviceSynchronize();
     free(A_h);
     free(B_h);
